@@ -1,9 +1,11 @@
 package org.dellmdq.test.springboot.app.controllers;
 
+import static javax.swing.UIManager.get;
 import static org.dellmdq.test.springboot.app.Datos.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.dellmdq.test.springboot.app.models.Cuenta;
 import org.dellmdq.test.springboot.app.models.TransaccionDTO;
 import org.dellmdq.test.springboot.app.services.CuentaService;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,9 +22,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -97,5 +102,25 @@ class CuentaControllerTest {
                 .andExpect(jsonPath("$.transaccion.cuentaOrigenId").value(transaccionDTO.getCuentaOrigenId()))
                 .andExpect(content().json(objectMapper.writeValueAsString(response)));
 
+    }
+
+    @Test
+    void findAll() throws Exception {
+        //Given
+        List<Cuenta> cuentas = Arrays.asList(crearCuenta001().orElseThrow(),crearCuenta002().orElseThrow());
+        //El service es un mock, lo que queremos testear es el controller en este contexto
+        when(cuentaService.findAll()).thenReturn(cuentas);
+
+        //When
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/cuentas").contentType(MediaType.APPLICATION_JSON))
+        //Then
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].persona").value("Andrés"))
+                .andExpect(jsonPath("$[1].persona").value("Jorge"))
+                .andExpect(jsonPath("$[0].saldo").value("1000"))
+                .andExpect(jsonPath("$[1].saldo").value("2000"))
+                .andExpect(jsonPath("$",hasSize(2)))
+                .andExpect(content().json(objectMapper.writeValueAsString(cuentas)));
     }
 }

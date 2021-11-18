@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.http.HttpStatus.*;
@@ -21,10 +22,23 @@ public class CuentaController {
     @Autowired
     CuentaService cuentaService;
 
+    @GetMapping
+    @ResponseStatus(OK)
+    public List<Cuenta> findAll(){
+        return cuentaService.findAll();
+    }
+
     @GetMapping("/{id}")
     @ResponseStatus(OK)
     public Cuenta detalle(@PathVariable(name="id") Long id){//no es necesario poner el name. por default asignara al mismo nombre de parametro
         return cuentaService.findById(id);
+    }
+
+    @PostMapping
+    @ResponseStatus(CREATED)
+    public Cuenta save(@RequestBody Cuenta cuenta){
+
+        return null;
     }
 
     @PostMapping("/transferencia")
