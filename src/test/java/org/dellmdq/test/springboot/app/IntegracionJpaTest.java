@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -55,5 +56,23 @@ public class IntegracionJpaTest {
         List<Cuenta> cuentaList = cuentaRepository.findAll();
         assertFalse(cuentaList.isEmpty());
         assertEquals(2,cuentaList.size());
+    }
+
+    @Test
+    void save(){
+        //Given
+        Cuenta cuentaPepe = new Cuenta(null, "Pepe", new BigDecimal("3000"));
+        Cuenta cuentaSaved = cuentaRepository.save(cuentaPepe);//(1)
+
+        //When
+        //Cuenta cuentaSaved = cuentaRepository.findByPersona("Pepe").orElseThrow();// ESTO ESTA DEMÁS. no es necesario crearla. La instanciamos con el retorno del repo.(1)
+
+        //Then
+        assertEquals("Pepe", cuentaSaved.getPersona());
+        assertEquals("3000",cuentaSaved.getSaldo().toPlainString());
+//        assertEquals(3,cuentaSaved.getId()); //NO RECOMENDABLE. puede fallar debido a modificaciones previas en la bd y que luego no se haya hecho el ROLLBACK
+
+
+
     }
 }
