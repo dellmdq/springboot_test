@@ -38,7 +38,7 @@ public class CuentaController {
     @ResponseStatus(CREATED)
     public Cuenta save(@RequestBody Cuenta cuenta){
 
-        return null;
+        return cuentaService.save(cuenta);
     }
 
     @PostMapping("/transferencia")
