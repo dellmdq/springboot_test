@@ -29,16 +29,18 @@ public class CuentaController {
 
     @PostMapping("/transferencia")
     public ResponseEntity<?> transferir(@RequestBody TransaccionDTO transaccionDTO){
-        cuentaService.transferir(transaccionDTO.getCuentaOrigenId(),transaccionDTO.getCuentaDestinoId(),
+        cuentaService.transferir(transaccionDTO.getCuentaOrigenId(),
+                transaccionDTO.getCuentaDestinoId(),
                 transaccionDTO.getMonto(),
                 transaccionDTO.getBancoId());
 
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();//armamos nuestro response
         response.put("date", LocalDate.now().toString());
-        response.put("mensaje", "Transferencia realizada con éxito");
+        response.put("status", "OK");
+        response.put("mensaje", "Transferencia realizada con éxito.");
         response.put("transaccion", transaccionDTO);
 
-        return ResponseEntity.ok(transaccionDTO);//aqui devolvemos el JSON
+        return ResponseEntity.ok(response);//aqui devolvemos el JSON
     }
 
 
