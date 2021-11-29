@@ -56,8 +56,8 @@ class SpringbootTestApplicationTests {
 //		when(cuentaRepository.findById(2L)).thenReturn(Datos.CUENTA_002);
 //		when(bancoRepository.findById(1L)).thenReturn(Datos.BANCO);
 
-		//reemplazamos por los métodos estáticos para tener variables limpias en cada test
-		//modificamos los métodos para que
+		/**reemplazamos por los métodos estáticos para tener variables limpias en cada test
+		modificamos los métodos para que*/
 		when(cuentaRepository.findById(1L)).thenReturn(crearCuenta001());
 		when(cuentaRepository.findById(2L)).thenReturn(crearCuenta002());
 		when(bancoRepository.findById(1L)).thenReturn(crearBanco());
@@ -66,7 +66,7 @@ class SpringbootTestApplicationTests {
 		BigDecimal saldoOrigen = cuentaService.revisarSaldo(1L);
 		BigDecimal saldoDestino = cuentaService.revisarSaldo(2L);
 
-		//chequeamos saldos originales
+		/**chequeamos saldos originales*/
 		assertEquals("1000", saldoOrigen.toPlainString());
 		assertEquals("2000", saldoDestino.toPlainString());
 
