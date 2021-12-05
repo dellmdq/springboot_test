@@ -51,7 +51,7 @@ class CuentaControllerWebTestClientTest {
         response.put("transaccion", transaccionDTO);
 
         //When
-        webTestClient.post().uri("http://localhost:8080/api/cuentas/transferencia")
+        webTestClient.post().uri("/api/cuentas/transferencia")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(transaccionDTO)
                 //a cambio, a partir de aca viene la respuesta, lo que esperamos testear.
