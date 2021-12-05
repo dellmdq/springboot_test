@@ -1,6 +1,7 @@
 package org.dellmdq.test.springboot.app.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dellmdq.test.springboot.app.models.TransaccionDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -57,7 +59,18 @@ class CuentaControllerWebTestClientTest {
                 //a cambio, a partir de aca viene la respuesta, lo que esperamos testear.
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody()
+                .expectBody()//se puede usar con un String.class y modificar abajo json. distintas formas de obtener el body.
+                .consumeWith(answer -> {
+                    try {
+                    JsonNode json = objectMapper.readTree(answer.getResponseBody());
+                    assertEquals("Transferencia realizada con éxito!", json.path("mensaje").asText());
+                    assertEquals(1L, json.path("transaccion").path("cuentaOrigenId").asLong());
+                    assertEquals(LocalDate.now().toString(), json.path("date").asText());
+                    assertEquals("100", json.path("transaccion").path("monto").asText());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                })
                 .jsonPath("$.mensaje").isNotEmpty()
                 .jsonPath("$.mensaje").value(is("Transferencia realizada con éxito."))
                 //lo mismo a la linea anterior pero con lambdas
