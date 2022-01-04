@@ -1,8 +1,5 @@
 package org.dellmdq.test.springboot.app.controllers;
 
-import static javax.swing.UIManager.get;
-import static org.dellmdq.test.springboot.app.Datos.*;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dellmdq.test.springboot.app.models.Cuenta;
@@ -13,11 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.math.BigDecimal;
@@ -27,9 +22,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.dellmdq.test.springboot.app.Datos.crearCuenta001;
+import static org.dellmdq.test.springboot.app.Datos.crearCuenta002;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -58,7 +54,7 @@ class CuentaControllerTest {
         //Given CONTEXTO DE LA PRUEBA
         when(cuentaService.findById(1L)).thenReturn(crearCuenta001().orElseThrow());
 
-        //When SE HACE LA LLAMADA A NUESTRO CONTROLADOR REAL. EL SERVICE Y LO DEMÁS ES SIMULADO.
+        //When. SE HACE LA LLAMADA A NUESTRO CONTROLADOR REAL. EL SERVICE Y LO DEMÁS ES SIMULADO.
         mockMvc.perform(MockMvcRequestBuilders.get("/api/cuentas/1").contentType(MediaType.APPLICATION_JSON))
         //Then
                 .andExpect(status().isOk())
