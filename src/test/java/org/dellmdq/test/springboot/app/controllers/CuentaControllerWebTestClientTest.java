@@ -11,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import javax.print.attribute.standard.Media;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,10 +18,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static org.hamcrest.Matchers.*;
 
 /**En este test, vamos a estar usando clientes http y nada es mockeado, se utilizan todos los
  * layers para hacer este test. Recordar que en esta clase, los test modifican los datos
@@ -164,5 +164,51 @@ class CuentaControllerWebTestClientTest {
                 //distintas formas y modulos para testear tamaño de la lista
                 .hasSize(2)
                 .value(hasSize(2));
+    }
+
+    @Test
+    @Order(6)
+    void testGuardar() {
+        //given
+        Cuenta cuenta = new Cuenta(null, "Pepe", new BigDecimal("3000"));
+
+        //when
+        webTestClient.post().uri("/api/cuentas")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(cuenta)
+                .exchange()
+        //then
+                .expectStatus().isCreated()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$.id").isEqualTo(3)
+                .jsonPath("$.persona").isEqualTo("Pepe")
+                .jsonPath("$.persona").value(is("Pepe"))
+                .jsonPath("$.saldo").isEqualTo(3000);
+    }
+    /**Mismo test pero utilizando consumeWith para validar los campos.*/
+    @Test
+    @Order(7)
+    void testGuardar2() {
+        //given
+        Cuenta cuenta = new Cuenta(null, "Pepa", new BigDecimal("3500"));
+
+        //when
+        webTestClient.post().uri("/api/cuentas")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(cuenta)
+                .exchange()
+                //then
+                .expectStatus().isCreated()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(Cuenta.class)
+                .consumeWith(response -> {
+                    Cuenta c = response.getResponseBody();
+                    //validamos la respuesta
+                    assertNotNull(c);
+                    assertEquals(4L, c.getId());
+                    assertEquals("Pepa", c.getPersona());
+                    assertEquals("3500", c.getSaldo().toPlainString());
+                });
     }
 }
