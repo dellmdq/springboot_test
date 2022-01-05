@@ -235,7 +235,9 @@ class CuentaControllerWebTestClientTest {
 
         webTestClient.get().uri("/api/cuentas/3")
                 .exchange()
-                .expectStatus().is5xxServerError();
-
+                //.expectStatus().is5xxServerError();
+                // una mejor manera de mostrar esto es con un 404, modificamos el controller para corregir esto.
+                .expectStatus().isNotFound()
+                .expectBody().isEmpty();
     }
 }
