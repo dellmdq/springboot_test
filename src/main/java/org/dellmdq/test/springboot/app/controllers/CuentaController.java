@@ -57,5 +57,10 @@ public class CuentaController {
         return ResponseEntity.ok(response);//aqui devolvemos el JSON
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(NO_CONTENT)
+    public void delete(@PathVariable Long id){
+        cuentaService.deleteById(id);
+    }
 
 }
