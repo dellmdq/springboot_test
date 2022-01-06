@@ -10,13 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -92,6 +95,87 @@ class CuentaControllerTestRestTemplateTest {
         assertEquals("Andrés", cuenta.getPersona());
         assertEquals("900.00", cuenta.getSaldo().toPlainString());
         assertEquals(new Cuenta(1L, "Andrés", new BigDecimal("900.00")), cuenta);
+    }
+
+    @Test
+    @Order(3)
+    void testlistar() throws JsonProcessingException {
+        ResponseEntity<Cuenta[]> response = client.getForEntity(crearUri("/api/cuentas"), Cuenta[].class);
+        assertNotNull(response.getBody());
+        List<Cuenta> cuentas = Arrays.asList(response.getBody());
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(MediaType.APPLICATION_JSON, response.getHeaders().getContentType());
+
+        //Testeando con el objeto cuentas y el response
+        assertEquals(2, cuentas.size());
+        //id, nombre, saldo
+        assertEquals(1L, cuentas.get(0).getId());
+        assertEquals("Andrés", cuentas.get(0).getPersona());
+        assertEquals("900.00", cuentas.get(0).getSaldo().toPlainString());
+        assertEquals(2L, cuentas.get(1).getId());
+        assertEquals("John", cuentas.get(1).getPersona());
+        assertEquals("2100.00", cuentas.get(1).getSaldo().toPlainString());
+
+        //Otra forma es testear con JsonNode
+        JsonNode json = objectMapper.readTree(objectMapper.writeValueAsString(cuentas));
+        assertEquals(1L, json.get(0).path("id").asLong());
+        assertEquals("Andrés", json.get(0).path("persona").asText());
+        assertEquals("900.0", json.get(0).path("saldo").asText());
+        assertEquals(2L, json.get(1).path("id").asLong());
+        assertEquals("John", json.get(1).path("persona").asText());
+        assertEquals("2100.0", json.get(1).path("saldo").asText());
+
+    }
+
+    @Test
+    @Order(4)
+    void testGuardar() {
+        Cuenta cuentaRequest = new Cuenta(null, "Pepa", new BigDecimal("3800"));
+
+        ResponseEntity<Cuenta> response = client.postForEntity(crearUri("/api/cuentas"), cuentaRequest, Cuenta.class);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(MediaType.APPLICATION_JSON, response.getHeaders().getContentType());
+        //para el request no es necesario chequear el contentType ya que el cliente envía la cuenta como un json o el mismo servidor se encarga de hacerlo
+
+        Cuenta cuentaCreated = response.getBody();
+        assertNotNull(cuentaCreated);
+        assertEquals(3L, cuentaCreated.getId());
+        assertEquals("Pepa", cuentaCreated.getPersona());
+        assertEquals("3800", cuentaCreated.getSaldo().toPlainString());
+    }
+
+    @Test
+    @Order(5)
+    void testEliminar() {
+        ResponseEntity<Cuenta[]> responseGet = client.getForEntity(crearUri("/api/cuentas"), Cuenta[].class);
+        assertNotNull(responseGet.getBody());
+        List<Cuenta> cuentas = Arrays.asList(responseGet.getBody());
+        assertEquals(3, cuentas.size());
+
+        //devuelve un void, no devuelve nada por ende no podemos testear mucho
+        //client.delete(crearUri("/api/cuentas/3"));
+
+        //otra forma de hacer el delete y poder testear el status. Usando exchange(que se puede usar con cualquier request HTTP)
+        Map<String, Long> pathVariables = new HashMap<>();
+        pathVariables.put("id",3L);
+        ResponseEntity<Void> exchange = client.exchange(crearUri("/api/cuentas/{id}"), HttpMethod.DELETE, null, Void.class,
+                pathVariables);//para usar el pathvariable tiene que tener mismo nombre que en el controller
+        assertEquals(HttpStatus.NO_CONTENT, exchange.getStatusCode());
+        assertFalse(exchange.hasBody());
+
+
+        //testeamos que devuelva una lista con 2 elementos y que no exista cuando buscamos por id
+        responseGet = client.getForEntity(crearUri("/api/cuentas"), Cuenta[].class);
+        assertNotNull(responseGet.getBody());
+        cuentas = Arrays.asList(responseGet.getBody());
+        assertEquals(2, cuentas.size());
+
+        ResponseEntity<Cuenta> responseGetId = client.getForEntity(crearUri("/api/cuentas/3"), Cuenta.class);
+        assertEquals(HttpStatus.NOT_FOUND, responseGetId.getStatusCode());
+        assertFalse(responseGetId.hasBody());
+
     }
 
     private String crearUri(String uri){
