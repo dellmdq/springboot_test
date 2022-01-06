@@ -6,6 +6,7 @@ import org.dellmdq.test.springboot.app.models.Cuenta;
 import org.dellmdq.test.springboot.app.models.TransaccionDTO;
 import org.dellmdq.test.springboot.app.services.CuentaService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -66,7 +67,7 @@ class CuentaControllerTest {
     }
 
     @Test
-    void transferir() throws Exception, JsonProcessingException {
+    void transferir() throws Exception {
 
         //Given
         TransaccionDTO transaccionDTO = new TransaccionDTO();
@@ -144,4 +145,6 @@ class CuentaControllerTest {
 
         verify(cuentaService).save(any());
     }
+
+
 }

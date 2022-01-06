@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -29,9 +30,14 @@ public class CuentaController {
     }
 
     @GetMapping("/{id}")
-    @ResponseStatus(OK)
-    public Cuenta detalle(@PathVariable(name="id") Long id){//no es necesario poner el name. por default asignara al mismo nombre de parametro
-        return cuentaService.findById(id);
+    public ResponseEntity<?> detalle(@PathVariable(name="id") Long id){//no es necesario poner el name. por default asignara al mismo nombre de parametro
+        Cuenta cuenta;
+        try{
+            cuenta = cuentaService.findById(id);
+        }catch(NoSuchElementException e){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(cuenta);
     }
 
     @PostMapping
@@ -57,5 +63,10 @@ public class CuentaController {
         return ResponseEntity.ok(response);//aqui devolvemos el JSON
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(NO_CONTENT)
+    public void delete(@PathVariable Long id){
+        cuentaService.deleteById(id);
+    }
 
 }

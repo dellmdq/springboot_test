@@ -11,16 +11,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import javax.print.attribute.standard.Media;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static org.hamcrest.Matchers.*;
 
 /**En este test, vamos a estar usando clientes http y nada es mockeado, se utilizan todos los
  * layers para hacer este test. Recordar que en esta clase, los test modifican los datos
@@ -81,9 +83,7 @@ class CuentaControllerWebTestClientTest {
                 .jsonPath("$.mensaje").isNotEmpty()
                 .jsonPath("$.mensaje").value(is("Transferencia realizada con éxito."))
                 //lo mismo a la linea anterior pero con lambdas
-                .jsonPath("$.mensaje").value( valor -> {
-                    assertEquals("Transferencia realizada con éxito.", valor);
-                })
+                .jsonPath("$.mensaje").value( valor -> assertEquals("Transferencia realizada con éxito.", valor))
                 .jsonPath("$.mensaje").isEqualTo("Transferencia realizada con éxito.")
                 .jsonPath("$.transaccion.cuentaOrigenId").isEqualTo(transaccionDTO.getCuentaOrigenId())
                 .jsonPath("$.date").isEqualTo(LocalDate.now().toString())
@@ -120,8 +120,124 @@ class CuentaControllerWebTestClientTest {
                 .expectBody(Cuenta.class)
                 .consumeWith(response ->{
                    Cuenta cuenta = response.getResponseBody();
+                   assertNotNull(cuenta);
                    assertEquals("John", cuenta.getPersona());
                    assertEquals("2100.00",cuenta.getSaldo().toPlainString());
                 });
+    }
+
+    @Test
+    @Order(4)
+    void testListar() {
+        webTestClient.get().uri("/api/cuentas").exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$[0].persona").isEqualTo("Andrés")
+                .jsonPath("$[0].id").isEqualTo(1)
+                .jsonPath("$[0].saldo").isEqualTo(900)
+                .jsonPath("$[1].persona").isEqualTo("John")
+                .jsonPath("$[1].id").isEqualTo(2)
+                .jsonPath("$[1].saldo").isEqualTo(2100)
+                .jsonPath("$").isArray()
+                .jsonPath("$").value(hasSize(2));
+    }
+
+    @Test
+    @Order(5)
+    void testListar2() {
+        webTestClient.get().uri("/api/cuentas").exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(Cuenta.class)
+                .consumeWith(response -> {
+                    List<Cuenta> cuentas = response.getResponseBody();
+                    assertNotNull(cuentas);
+                    assertEquals(2, cuentas.size());
+                    assertEquals(1L, cuentas.get(0).getId());
+                    assertEquals("Andrés", cuentas.get(0).getPersona());
+                    assertEquals(900, cuentas.get(0).getSaldo().intValue());//expected como entero
+                    assertEquals(2L, cuentas.get(1).getId());
+                    assertEquals("John", cuentas.get(1).getPersona());
+                    assertEquals("2100.0", cuentas.get(1).getSaldo().toPlainString());//expected como string
+                })
+                //distintas formas y modulos para testear tamaño de la lista
+                .hasSize(2)
+                .value(hasSize(2));
+    }
+
+    @Test
+    @Order(6)
+    void testGuardar() {
+        //given
+        Cuenta cuenta = new Cuenta(null, "Pepe", new BigDecimal("3000"));
+
+        //when
+        webTestClient.post().uri("/api/cuentas")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(cuenta)
+                .exchange()
+        //then
+                .expectStatus().isCreated()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$.id").isEqualTo(3)
+                .jsonPath("$.persona").isEqualTo("Pepe")
+                .jsonPath("$.persona").value(is("Pepe"))
+                .jsonPath("$.saldo").isEqualTo(3000);
+    }
+    /**Mismo test pero utilizando consumeWith para validar los campos.*/
+    @Test
+    @Order(7)
+    void testGuardar2() {
+        //given
+        Cuenta cuenta = new Cuenta(null, "Pepa", new BigDecimal("3500"));
+
+        //when
+        webTestClient.post().uri("/api/cuentas")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(cuenta)
+                .exchange()
+                //then
+                .expectStatus().isCreated()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(Cuenta.class)
+                .consumeWith(response -> {
+                    Cuenta c = response.getResponseBody();
+                    //validamos la respuesta
+                    assertNotNull(c);
+                    assertEquals(4L, c.getId());
+                    assertEquals("Pepa", c.getPersona());
+                    assertEquals("3500", c.getSaldo().toPlainString());
+                });
+    }
+
+    @Test
+    @Order(8)
+    void testEliminar() {
+
+        webTestClient.get().uri("/api/cuentas").exchange()
+                            .expectStatus().isOk()
+                            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                            .expectBodyList(Cuenta.class)
+                            .hasSize(4);
+
+
+        webTestClient.delete().uri("/api/cuentas/3").exchange()
+                .expectStatus().isNoContent()
+                .expectBody().isEmpty();
+
+        webTestClient.get().uri("/api/cuentas").exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBodyList(Cuenta.class)
+                .hasSize(3);
+
+        webTestClient.get().uri("/api/cuentas/3")
+                .exchange()
+                //.expectStatus().is5xxServerError();
+                // una mejor manera de mostrar esto es con un 404, modificamos el controller para corregir esto.
+                .expectStatus().isNotFound()
+                .expectBody().isEmpty();
     }
 }
