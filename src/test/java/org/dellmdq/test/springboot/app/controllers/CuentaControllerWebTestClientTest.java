@@ -27,6 +27,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 /**En este test, vamos a estar usando clientes http y nada es mockeado, se utilizan todos los
  * layers para hacer este test. Recordar que en esta clase, los test modifican los datos
  * a los que tienen acceso los test. Por lo que es buenos utilizar @TestMethodOrder*/
+@Tag("Integracion_WebTestClient")
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CuentaControllerWebTestClientTest {
